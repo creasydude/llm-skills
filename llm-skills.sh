@@ -52,6 +52,7 @@ declare -a MENU_LABELS=()
 declare -a SELECTED=()
 MENU_TITLE=""
 MENUFOCUS=0
+MENU_RESULT=-1
 
 # ============================================================================
 # TUI Functions
@@ -87,6 +88,7 @@ tui_menu() {
     MENU_TITLE="$title"
     MENU_ITEMS=("${items[@]}")
     MENUFOCUS=0
+    MENU_RESULT=-1
 
     while true; do
         tui_clear
@@ -120,11 +122,13 @@ tui_menu() {
                 ;;
             '')
                 tui_show_cursor
-                return $MENUFOCUS
+                MENU_RESULT=$MENUFOCUS
+                return 0
                 ;;
             q|Q)
                 tui_show_cursor
-                return 255
+                MENU_RESULT=255
+                return 0
                 ;;
         esac
     done
@@ -140,6 +144,7 @@ tui_multi_select() {
     for _ in "${items[@]}"; do checked+=(" "); done
 
     local focus=0
+    MENU_RESULT=-1
 
     while true; do
         tui_clear
@@ -192,12 +197,14 @@ tui_multi_select() {
                     fi
                     i=$((i + 1))
                 done
+                MENU_RESULT=0
                 return 0
                 ;;
             q|Q)
                 tui_show_cursor
                 SELECTED=()
-                return 255
+                MENU_RESULT=255
+                return 0
                 ;;
         esac
     done
@@ -211,13 +218,12 @@ tui_select_tool() {
     done
 
     tui_menu "Select Target Tool" "${labels[@]}"
-    local choice=$?
 
-    if [ $choice -eq 255 ]; then
+    if [ $MENU_RESULT -eq 255 ]; then
         return 255
     fi
 
-    echo "${tools[$choice]}"
+    echo "${tools[$MENU_RESULT]}"
 }
 
 tui_show_installed() {
@@ -598,7 +604,7 @@ tui_main() {
             "Update llm-skills" \
             "Exit"
 
-        local choice=$?
+        local choice=$MENU_RESULT
 
         case $choice in
             0) # Install Skills
@@ -606,9 +612,8 @@ tui_main() {
                 for tool in "${!TOOL_PATHS[@]}"; do tools+=("$tool"); done
 
                 tui_multi_select "Select Skills to Install" "${!SKILLS[@]}"
-                local ret=$?
 
-                if [ $ret -eq 255 ] || [ ${#SELECTED[@]} -eq 0 ]; then
+                if [ $MENU_RESULT -eq 255 ] || [ ${#SELECTED[@]} -eq 0 ]; then
                     continue
                 fi
 
