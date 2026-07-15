@@ -356,6 +356,9 @@ fetch_file() {
 }
 
 auto_update() {
+    # Skip for now — re-enable after pushing to GitHub
+    return 0
+
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -703,16 +706,15 @@ cmd_update() {
 # ============================================================================
 
 main() {
-    # If no arguments — either curl | bash install or interactive TUI
+    # If no arguments — show TUI or install
     if [ $# -eq 0 ]; then
-        # Check if stdin is a terminal (interactive mode)
-        if [ -t 0 ]; then
-            # Interactive — show TUI
+        # If already installed, show TUI
+        if [ -f "$COMMAND_PATH" ]; then
             auto_update "$@" || true
             fetch_skills
             tui_main
         else
-            # Piped from curl — install only
+            # First install via curl | bash
             self_install
         fi
         return
