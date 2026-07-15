@@ -110,27 +110,31 @@ tui_menu() {
         # Read input
         tui_hide_cursor
         local key
-        read -rsn1 key
+        IFS= read -rsn1 key
 
-        case "$key" in
-            $'\x1b')
-                read -rsn2 key
-                case "$key" in
-                    '[A') MENUFOCUS=$(( (MENUFOCUS - 1 + ${#items[@]} ) % ${#items[@]} )) ;;
-                    '[B') MENUFOCUS=$(( (MENUFOCUS + 1) % ${#items[@]} )) ;;
-                esac
-                ;;
-            '')
-                tui_show_cursor
-                MENU_RESULT=$MENUFOCUS
-                return 0
-                ;;
-            q|Q)
-                tui_show_cursor
-                MENU_RESULT=255
-                return 0
-                ;;
-        esac
+        # Handle escape sequences (arrow keys)
+        if [[ "$key" == $'\x1b' ]]; then
+            read -rsn2 key
+            case "$key" in
+                '[A') MENUFOCUS=$(( (MENUFOCUS - 1 + ${#items[@]} ) % ${#items[@]} )) ;;
+                '[B') MENUFOCUS=$(( (MENUFOCUS + 1) % ${#items[@]} )) ;;
+            esac
+            continue
+        fi
+
+        # Handle Enter
+        if [[ -z "$key" ]]; then
+            tui_show_cursor
+            MENU_RESULT=$MENUFOCUS
+            return 0
+        fi
+
+        # Handle q/Q
+        if [[ "$key" == "q" || "$key" == "Q" ]]; then
+            tui_show_cursor
+            MENU_RESULT=255
+            return 0
+        fi
     done
 }
 
@@ -141,7 +145,7 @@ tui_multi_select() {
 
     SELECTED=()
     local -a checked=()
-    for _ in "${items[@]}"; do checked+=(" "); done
+    for _ in "${items[@]}"; do checked+=("0"); done
 
     local focus=0
     MENU_RESULT=-1
@@ -153,7 +157,7 @@ tui_multi_select() {
         local i=0
         for item in "${items[@]}"; do
             local checkbox=" "
-            if [ "${checked[$i]}" = "x" ]; then
+            if [ "${checked[$i]}" = "1" ]; then
                 checkbox="${GREEN}✓${NC}"
             fi
 
@@ -170,43 +174,50 @@ tui_multi_select() {
 
         tui_hide_cursor
         local key
-        read -rsn1 key
+        IFS= read -rsn1 key
 
-        case "$key" in
-            $'\x1b')
-                read -rsn2 key
-                case "$key" in
-                    '[A') focus=$(( (focus - 1 + ${#items[@]} ) % ${#items[@]} )) ;;
-                    '[B') focus=$(( (focus + 1) % ${#items[@]} )) ;;
-                esac
-                ;;
-            ' ')
-                if [ "${checked[$focus]}" = "x" ]; then
-                    checked[$focus]=" "
-                else
-                    checked[$focus]="x"
+        # Handle escape sequences (arrow keys)
+        if [[ "$key" == $'\x1b' ]]; then
+            read -rsn2 key
+            case "$key" in
+                '[A') focus=$(( (focus - 1 + ${#items[@]} ) % ${#items[@]} )) ;;
+                '[B') focus=$(( (focus + 1) % ${#items[@]} )) ;;
+            esac
+            continue
+        fi
+
+        # Handle Enter
+        if [[ -z "$key" ]]; then
+            tui_show_cursor
+            SELECTED=()
+            i=0
+            for item in "${items[@]}"; do
+                if [ "${checked[$i]}" = "1" ]; then
+                    SELECTED+=("$item")
                 fi
-                ;;
-            '')
-                tui_show_cursor
-                SELECTED=()
-                i=0
-                for item in "${items[@]}"; do
-                    if [ "${checked[$i]}" = "x" ]; then
-                        SELECTED+=("$item")
-                    fi
-                    i=$((i + 1))
-                done
-                MENU_RESULT=0
-                return 0
-                ;;
-            q|Q)
-                tui_show_cursor
-                SELECTED=()
-                MENU_RESULT=255
-                return 0
-                ;;
-        esac
+                i=$((i + 1))
+            done
+            MENU_RESULT=0
+            return 0
+        fi
+
+        # Handle Space
+        if [[ "$key" == " " ]]; then
+            if [ "${checked[$focus]}" = "1" ]; then
+                checked[$focus]="0"
+            else
+                checked[$focus]="1"
+            fi
+            continue
+        fi
+
+        # Handle q/Q
+        if [[ "$key" == "q" || "$key" == "Q" ]]; then
+            tui_show_cursor
+            SELECTED=()
+            MENU_RESULT=255
+            return 0
+        fi
     done
 }
 
