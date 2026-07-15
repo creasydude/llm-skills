@@ -9,21 +9,44 @@ curl -fsSL https://raw.githubusercontent.com/creasydude/llm-skills/main/llm-skil
 ## Quick Start
 
 ```bash
-# Install everything to all detected tools
-llm-skills install
+# Interactive TUI — just run it
+llm-skills
 
-# Pick a specific tool
-llm-skills install --tool claude-code
-
-# Pick a specific skill
-llm-skills install --skill telegram-serverless
-
-# See what's available and what's installed
+# Or use CLI mode
+llm-skills install --tool claude-code --skill telegram-serverless
 llm-skills list
-
-# Remove something
 llm-skills remove telegram-serverless
 ```
+
+## TUI
+
+After installation, running `llm-skills` launches an interactive terminal UI:
+
+```
+  ┌────────────────────────────────────────────────────────┐
+  │                     llm-skills                         │
+  ├────────────────────────────────────────────────────────┤
+  │                                                        │
+  │    Manage AI coding assistant skills                   │
+  │    github.com/creasydude/llm-skills                    │
+  │                                                        │
+  └────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────┐
+  │                     Main Menu                          │
+  ├────────────────────────────────────────────────────────┤
+  │    ▸ Install Skills                                    │
+  │      View Installed                                    │
+  │      Remove Skills                                     │
+  │      Update llm-skills                                 │
+  │      Exit                                              │
+  └────────────────────────────────────────────────────────┘
+    ↑↓ navigate  Enter select  q quit
+```
+
+**Navigate:** `↑` `↓` arrows — **Select:** `Enter` — **Toggle:** `Space` — **Back/Quit:** `q`
+
+---
 
 ## Skills
 
@@ -72,3 +95,4 @@ The installer (`llm-skills.sh`) is a single bash script that:
 3. **Discovers skills** via GitHub API — new skills show up without reinstalling
 4. **Detects tools** — finds what's installed on your machine and installs to the right paths
 5. **Symlinks where possible** — Claude Code and Codex get symlinks, others get copies
+6. **Interactive TUI** — arrow-key navigation, multi-select, no dependencies
